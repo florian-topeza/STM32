@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(perl -v)",
+      "Bash(awk '{print $2}')",
+      "Bash(git log --oneline --all -- '*lsm303agr*' | head -20 *)",
+      "Read(//tmp/**)",
+      "Bash(grep -oE '^#define[[:space:]]+[A-Za-z_][A-Za-z0-9_]*' /tmp/old_lsm303agr.h | awk '{print $2}' | sort -u > /tmp/old_defines.txt *)",
+      "Bash(grep -oE '[A-Za-z_][A-Za-z0-9_]*$')",
+      "Bash(rm -f /tmp/old_lsm303agr.h /tmp/old_defines.txt /tmp/new_defines.txt /tmp/old_fields.txt /tmp/new_fields.txt /tmp/old_funcs.txt /tmp/new_funcs.txt)",
+      "Bash(grep -oE '[A-Za-z_][A-Za-z0-9_]*\\(\\\\[[0-9]*\\\\]\\)?$')",
+      "Bash(gcc --version)",
+      "Bash(ls \"/c/ST/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/bin\" 2>&1 | head -30)",
+      "Read(//c/ST/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/**)",
+      "Bash(find \"/c/ST/STM32CubeCLT_1.18.0\" -iname \"*gcc*\" 2>/dev/null | head -20)",
+      "Read(//c/ST/**)",
+      "Bash(cppcheck --version)",
+      "Bash(cppcheck --enable=warning,style,performance,portability --inconclusive --std=c11 -I /c/Users/flori/AppData/Local/Temp/claude/d--Workspace-STM32-stm32/fbe23c73-5908-46fa-9043-bbe02a4a1474/scratchpad/stub -I /d/Workspace/STM32/stm32/stm32-common -I /d/Workspace/STM32/stm32/stm32-lsm6dsl /d/Workspace/STM32/stm32/stm32-lsm6dsl/lsm6dsl.c)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

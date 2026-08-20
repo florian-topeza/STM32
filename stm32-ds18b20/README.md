@@ -1,41 +1,35 @@
 # STM32-DS18B20
 
-## C driver to interface DS18B20 temperature sensor with an STM32 microcontroller
+C driver to interface one or more DS18B20 1-Wire temperature sensors with an STM32 microcontroller.
 
-The driver itself is made of the files DS18B20.c and DS18B20.h.
+The driver is made of `ds18b20.c` and `ds18b20.h`. It requires `errors.h` from [stm32-common](https://github.com/astarus-pyxis/stm32-common) for the shared `error_t` return codes, and optionally `console.h`/`console.c` from the same repo if `DEBUG_DS18B20` is defined (enables `log_ds18b20` traces over UART).
 
-It requires the files errors.h, console.h and console.c, which are common files for all my drivers. They are used to set up the error type (in errors.h) returned by some of the functions of the driver and to display data with the microcontroller on a terminal (in console.h and console.c). These files can be found here https://github.com/astarus-pyxis/stm32-common.
+## Hardware setup
 
-The file main.c is an example of main that uses the driver.
+- The onewire GPIO pin must be configured as **open-drain output** with a pull-up (external ~4.7kΩ, or the internal pull-up if your MCU/bus length allows it). The driver only calls `HAL_GPIO_WritePin`/`HAL_GPIO_ReadPin`; it never switches the pin direction, so a push-pull configuration will short the bus.
+- A general-purpose timer must be configured (via CubeMX) with a 1µs tick (e.g. prescaler set so the counter runs at 1 MHz). `DS18B20_Init` starts it — it does not need to be started beforehand.
+
+## API
+
+```c
+DS18B20_t sensor;
+DS18B20_Init(&sensor, &htim6, GPIOA, GPIO_PIN_1);
+
+uint64_t rom_codes[8] = {0};      // zero-initialized, sized for the max number of sensors expected
+DS18B20_Search(&sensor, rom_codes);
+
+int16_t temperatures[8];
+DS18B20_GetTemp(&sensor, rom_codes, temperatures);
+float degC = temperatures[0] / 16.0f;  // temperature is a signed 1/16 degC fixed-point value
+```
+
+- `DS18B20_Init` — binds the handle to a timer and GPIO pin, and starts the timer.
+- `DS18B20_Search` — walks the bus and fills `rom_codes` with the ROM code of every sensor found (array must be zero-initialized; `DS18B20_GetTemp` uses a `0` entry as the end-of-list marker).
+- `DS18B20_GetTemp` — triggers a conversion and reads back the temperature of every sensor in `rom_codes`, in signed 1/16 degC units (negative values are valid, e.g. `-16` = -1.0°C).
 
 ## How to use this driver in a project
 
-No need to use CubeMX as the whole configuration of the sensor is done in the driver.
-
-To use this driver in an STM32 CMake project, the C files  DS18B20.c and console.c shall be placed in the Core > Src folder of the project, and DS18B20.h, errors.h and console.h in the Core > Inc folder.
-
-It also requires to add the sources to executable in the CMakeLists.txt file at the root of the project. To do this, the following at line 48 of this file.
-
-
-```
-# Add sources to executable
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user sources here
-)
-
-```
-
-shall be changed to
-
-
-```
-# Add sources to executable
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user sources here
-    "Core/Src/console.c"
-    "Core/Src/DS18B20.c"
-)
-```
+Copy `ds18b20.c` and `ds18b20.h` (and `errors.h`, plus `console.h`/`console.c` if using `DEBUG_DS18B20`) into your project's source tree, and add `ds18b20.c` (and `console.c` if used) to your build system's source list.
 
 ## Licence & Warranty
 

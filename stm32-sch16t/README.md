@@ -1,21 +1,22 @@
 # STM32-SCH16T
 
-## C driver to interface SCH16T IMU with an STM32 microcontroller
+## C driver to interface the Murata SCH16T-K01 IMU with an STM32 microcontroller
 
-The driver itself is made of the files sch16t.c and sch16t.h.
+The driver itself is made of the files sch16t.c and sch16t.h. It communicates with the sensor over SPI, using the sensor's 48-bit SPI frame format (32-bit frame support is declared in sch16t.h but not currently exercised by the driver).
 
-It requires the files errors.h, console.h and console.c, which are common files for all my drivers. They are used to set up the error type (in errors.h) returned by some of the functions of the driver and to display data with the microcontroller on a terminal (in console.h and console.c). These files can be found here https://github.com/astarus-pyxis/stm32-common.
+It requires the file errors.h, common to all my drivers, which declares the error type returned by the driver's functions. It can be found here https://github.com/astarus-pyxis/stm32-common.
+
+Defining `DEBUG_MURATA` enables debug logs over `printf`. This additionally requires console.h and console.c, also common to all my drivers, which retarget `printf` output over UART. They can be found at the same link above.
 
 The file main.c is an example of main that uses the driver.
 
 ## How to use this driver in a project
 
-To use this driver in an STM32 CMake project, the SPI peripheral for the sensor shall be configured by the user, with CubeMX or directly in the code. This is not done by the driver.
+To use this driver in an STM32 CMake project, the SPI peripheral for the sensor, as well as its CS and RESET GPIO pins, shall be configured by the user, with CubeMX or directly in the code. This is not done by the driver.
 
-The C files  sch16t.c and console.c shall be placed in the Core > Src folder of the project, and sch16t.h, errors.h and console.h in the Core > Inc folder.
+The C file sch16t.c shall be placed in the Core > Src folder of the project, and sch16t.h and errors.h in the Core > Inc folder. If `DEBUG_MURATA` is defined, console.c shall also be placed in Core > Src, and console.h in Core > Inc.
 
 It also requires to add the sources to executable in the CMakeLists.txt file at the root of the project. To do this, the following at line 48 of this file
-
 
 ```
 # Add sources to executable
@@ -27,12 +28,10 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 
 shall be changed to
 
-
 ```
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
-    "Core/Src/console.c"
     "Core/Src/sch16t.c"
 )
 ```
@@ -42,4 +41,3 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 This driver is licensed under GNU V3.0. It comes with no warranty.
 
 Please note that this is a minimal driver to work with this IMU. It does not provide all the functions that can be performed by this device. Notably, the initialization sequence uses the default configuration of the sensor.
-
